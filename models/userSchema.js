@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
 //  encrpting the password by using middleware. this pre will make it run everytime we use save method to save things in database-- kind of like eventlistener
 userSchema.pre("save", async function(next){
     //checking if modification not done with respect to password then don't need to encrpt the pass
-    if(!(this.modified("password"))) return next()
+    if(!(this.isModified("password"))) return next()
     this.password = await bcrypt.hash(this.password, 10);
     next()
 });
@@ -65,6 +65,21 @@ userSchema.method = {
                 expiresIn : config.JWT_EXPIRY
             }
         )
+    },
+
+    // generating unique string token for forgot password
+
+    generateForgotPasswordToken : function(){
+        //unique string
+        const forgotToken = crypto.randomBytes(20).toString('hex');
+        
+        //save to database by encpryting it
+        this.forgotPasswordToken = crypto.createHash("sha256").update(forgotToken).digest("hex");
+
+        //expires in saving to database (20mins)
+        this.forgotPasswordExpiry = Data.now() + 20 * 60 * 1000;
+
+        return forgotToken;
     }
 
 }
