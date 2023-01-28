@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+//individual product
 const productSchema = new mongoose.Schema(
     {
         name : {
