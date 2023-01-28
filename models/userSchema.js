@@ -3,7 +3,7 @@ import AuthRoles from '../utils/authRoles';
 import bcrypt from  "bcryptjs";
 import JWT from "jsonwebtoken";
 import crypto from "crypto";
-
+import config from "../config/index"
 // I have used mongodb hooks as i need to encrypt the password before saving them into the database, it works like a middleware 
 
 const userSchema = new mongoose.Schema(
@@ -44,6 +44,28 @@ userSchema.pre("save", async function(next){
     if(!(this.modified("password"))) return next()
     this.password = await bcrypt.hash(this.password, 10);
     next()
-})
+});
 
+// now adding more functionality to the schema -- kind of like prototype
+userSchema.method = {
+    // comparing password method
+    comparePassword : async function(enteredPassword){
+        return await bcrypt.compare(enteredPassword, this.password)
+    },
+
+    // generating JWT token for authorization
+    getJwtToken : function(){
+        return JWT.sign(
+            {
+                _id: this._id,
+                role: this.role
+            },
+            config.JWT_SECRET,
+            {
+                expiresIn : config.JWT_EXPIRY
+            }
+        )
+    }
+
+}
 export default mongoose.model('User', userSchema);
