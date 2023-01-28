@@ -98,6 +98,7 @@ export const login = asyncHandler( async (req, res) => {
 @description user logging out
 @parameters 
 @return success message
+
 */
 
 
@@ -114,3 +115,13 @@ export const logout = asyncHandler(async (req, res) => {
     })
 
 });
+
+/* 
+
+@Logout
+@route http://localhost:4000/api/auth/logout
+@description user logging out
+@parameters 
+@return success message
+
+*/
