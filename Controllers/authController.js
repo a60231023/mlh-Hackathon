@@ -214,3 +214,26 @@ export const resetPassword = asyncHandler( async (req, res) => {
     });
 
 });
+
+
+/* 
+
+@get profile
+@route http://localhost:4000/api/auth/profile
+@description check authorization and give user response
+@parameters  t
+@return User object
+
+*/
+
+
+export const getProfile = asyncHandler( async(req, res) => {
+    const {user} = req;
+    if(!user){
+        throw new CustomError('User not found', 404);
+    }
+    res.status(200).json({
+        success:true,
+        user
+    });
+});
