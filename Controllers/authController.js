@@ -2,7 +2,7 @@ import User from '../models/userSchema.js'
 import asyncHandler from '../services/asyncHandler.js'
 import CustomError from '../utils/customError.js'
 import mailHelper from '../utils/mailHelper.js';
-
+import crypto from 'crypto';
 //3days expiry
  
 export const cookieOptions = {
@@ -150,7 +150,7 @@ export const forgotPassword = asyncHandler( async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            message: `Email sent to ${user..email}`
+            message: `Email sent to ${user.email}`
         })
     } catch (error) {
         //roll-back as message not sent so forgot password token which was saved in the db has to be changed back
@@ -163,3 +163,54 @@ export const forgotPassword = asyncHandler( async (req, res) => {
 
     }
 })
+
+/* 
+
+@reset passwrord
+@route http://localhost:4000/api/auth/password/reset/:resetPasswordToken
+@description user will be able to reset password based on url token
+@parameters  token fropm url, password and confirm pass
+@return User object
+
+*/
+
+
+export const resetPassword = asyncHandler( async (req, res) => {
+    const {token: resetToken} = req.params;
+    const { password, confirmPassword} = req.body;
+    const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+
+    // key value - find forgotPasswordToken in the db with value resetPasswordToken
+    // {$gt : Date.now()}-- return only user which has date value greater than current date -- as if not greater than the link expired
+
+    const user = await User.findOne({
+        forgotPasswordToken : resetPasswordToken,
+        forgotPasswordExpiry : {$gt: Date.now()}
+    });
+
+    if(!user){
+        throw new CustomError('Password token is invalid or expired ', 400)
+    }
+
+    if(password != confirmPassword){
+        throw new CustomError('Password does not match', 400);
+    }
+
+    user.password = password;
+    user.forgotPasswordExpiry = undefined;
+    user.forgotPasswordToken = undefined;
+
+    await user.save();
+
+    // creating token and sending as response
+
+    const token = user.getJwtToken();
+    user.password = undefined;
+
+    res.cookie("token", token, cookieOptions);
+    res.status(200).json({
+        success: true,
+        user
+    });
+
+});
