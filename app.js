@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+const route= require('./Router/route');
 import morgan from "morgan";
 
 const app = express();
@@ -21,5 +22,5 @@ app.use(morgan("tiny"));
 // Calling use(cors()) will enable the express server to respond to preflight requests.
 app.use(cors());
 
-
+app.use("/api",route);
 export default app;
